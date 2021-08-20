@@ -40,8 +40,7 @@ export const Grid = (
       width = r.width / cols;
       height = r.height / rows;
 
-      for (let col = 0; col < cols; col++) {
-        // cells[col] = new Array<ICell>(rows);
+      for (let col = 0; col < cols; col++) {        
         datas[col] = new Array<ICellPathFinderData>(rows);
         for (let row = 0; row < rows; row++) {
           const isWall = Math.random() < wallPercentage;
@@ -72,8 +71,7 @@ export const Grid = (
             types: 0,
           };
           data.element = cell;
-          datas[col]![row] = data;
-          // cells[col]![row] = cell;
+          datas[col]![row] = data;          
           cells.push(cell);
         }
       }
