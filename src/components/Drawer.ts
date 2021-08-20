@@ -17,7 +17,7 @@ export const Drawer = () => {
             p5.fill(p5.color(0, 255, 0));
             break;
           default:
-            p5.fill(255);
+            p5.fill(234);
             break;
         }
         p5.stroke(255);

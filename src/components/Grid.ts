@@ -21,7 +21,7 @@ export const Grid = (
   wallPercentage: number,
   canvasSize: () => ISize
 ): IRenderable => {
-  const cells: ICell[][] = Array<Array<ICell>>(cols);
+  const cells: ICell[] = [];
   const walls: ICellElement[] = [];
   const datas: ICellPathFinderData[][] =
     Array<Array<ICellPathFinderData>>(cols);
@@ -35,13 +35,13 @@ export const Grid = (
   let width = 0;
   let height = 0;
   return {
-    setup: () => {      
+    setup: () => {
       const r = canvasSize();
       width = r.width / cols;
       height = r.height / rows;
 
       for (let col = 0; col < cols; col++) {
-        cells[col] = new Array<ICell>(rows);
+        // cells[col] = new Array<ICell>(rows);
         datas[col] = new Array<ICellPathFinderData>(rows);
         for (let row = 0; row < rows; row++) {
           const isWall = Math.random() < wallPercentage;
@@ -73,7 +73,8 @@ export const Grid = (
           };
           data.element = cell;
           datas[col]![row] = data;
-          cells[col]![row] = cell;
+          // cells[col]![row] = cell;
+          cells.push(cell);
         }
       }
       setNeighbors(cols, rows, datas);
@@ -81,7 +82,7 @@ export const Grid = (
       start = datas[startIndexes.col]![startIndexes.row]!;
       start.element!.types = CellType.OpenSet;
       end = datas[endIndexes.col]![endIndexes.row]!;
-      endCell = cells[endIndexes.col]![endIndexes.row]!;
+      endCell = cells[endIndexes.col * endIndexes.row];
       endCell!.types = CellType.Target;
 
       openSet.push(start!);
@@ -147,12 +148,7 @@ export const Grid = (
         width,
         height
       );
-      drawer.drawWalls(
-        p5,
-        walls,
-        width,
-        height
-      );
+      drawer.drawWalls(p5, walls, width, height);
       drawer.drawPath(p5, path, width, height);
     },
   };
