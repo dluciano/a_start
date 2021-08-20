@@ -1,6 +1,14 @@
-import { IRenderable, ISize } from "./interfaces";
+import {
+  CellType,
+  ICell,
+  ICellElement,
+  ICellPathFinderData,
+  IRenderable,
+  ISize,
+  IWall,
+} from "./interfaces";
+import { euclideanDistance, removeFromArray, setNeighbors } from "./Cell";
 
-import { Cell } from "./Cell";
 import { Drawer } from "./Drawer";
 import p5 from "p5";
 
@@ -8,89 +16,76 @@ export const Grid = (
   p5: p5,
   cols: number,
   rows: number,
+  endIndexes: { endRow: number; endCol: number },
   wallPercentage: number,
   canvasSize: () => ISize
 ): IRenderable => {
-  const removeFromArray = <T>(arr: Array<T>, element: any) => {
-    for (let i = arr.length - 1; i >= 0; i--) {
-      if (arr[i] == element) {
-        arr.splice(i, 1);
-      }
-    }
-  };
-  const heuristic = (a: Cell, b: Cell) => {
-    //const distance = Math.abs(a.col - b.col) + Math.abs(a.row - b.row); // Taxy cab distance. Square steps
-    const distance = p5.dist(a.col, a.row, b.col, b.row);
-    return distance;
-  };
-  const cells: Cell[][] = Array<Array<Cell>>(rows);
-  const openSet: Cell[] = [];
-  const closeSet: Cell[] = [];
-  let path: Cell[] = [];
-  let start: Cell | undefined;
-  let end: Cell | undefined;
-  const drawer = Drawer(p5);
+  const cells: ICell[][] = Array<Array<ICell>>(cols);
+  const walls: ICellElement[][] = Array<Array<ICellElement>>(cols);
+  const datas: ICellPathFinderData[][] =
+    Array<Array<ICellPathFinderData>>(cols);
+  const openSet: ICellPathFinderData[] = [];
+  const closeSet: ICellPathFinderData[] = [];
+  let path: ICell[] = [];
+  let start: ICellPathFinderData | undefined;
+  let end: ICellPathFinderData | undefined;
+  let endCell: ICell | undefined;
+  const drawer = Drawer();
+  let width = 0;
+  let height = 0;
   return {
     setup: () => {
-      const { width: canvasWidth, height: canvasHeight } = canvasSize();
+      const r = canvasSize();
+      width = r.width / cols;
+      height = r.height / rows;
 
-      for (let i = 0; i < cols; i++) {
-        cells[i] = new Array<Cell>(cols);
-        for (let j = 0; j < rows; j++) {
+      for (let col = 0; col < cols; col++) {
+        cells[col] = new Array<ICell>(rows);
+        walls[col] = new Array<ICellElement>(rows);
+        datas[col] = new Array<ICellPathFinderData>(rows);
+        for (let row = 0; row < rows; row++) {
           const isWall = Math.random() < wallPercentage;
-
-          cells[i]![j] = new Cell(
-            i,
-            j,
-            canvasWidth / cols,
-            canvasHeight / rows,
-            isWall ? p5.color(0) : p5.color(256),
-            { f: 0, g: 0, h: 0 },
-            [],
-            undefined,
+          if (
+            !(
+              (col === 0 && row === 0) ||
+              (col === endIndexes.endCol && row === endIndexes.endRow)
+            ) &&
             isWall
-          );
+          ) {
+            const wall: IWall = {
+              col,
+              row,
+            };
+            walls[col]![row] = wall;
+            continue;
+          }
+          const data: ICellPathFinderData = {
+            f: 0,
+            g: 0,
+            h: 0,
+            neighbors: [],
+            previous: undefined,
+            getDistance: (to: ICellElement) =>
+              euclideanDistance(p5, col, row, to.row, to.col),
+          };
+          const cell: ICell = {
+            col,
+            row,
+            data,
+            types: 0,
+          };
+          data.element = cell;
+          datas[col]![row] = data;
+          cells[col]![row] = cell;
         }
       }
+      setNeighbors(cols, rows, datas);
 
-      for (let i = 0; i < cols; i++) {
-        for (let j = 0; j < rows; j++) {
-          const neighbors = cells[i]![j]!.neighbors;
-          if (i < cols - 1) {
-            neighbors.push(cells[i + 1]![j]!);
-          }
-          if (i > 0) {
-            neighbors.push(cells[i - 1]![j]!);
-          }
-          if (j < rows - 1) {
-            neighbors.push(cells[i]![j + 1]!);
-          }
-          if (j > 0) {
-            neighbors.push(cells[i]![j - 1]!);
-          }
-          // Diagonals neighbors
-          if (i > 0 && j > 0) {
-            neighbors.push(cells[i - 1]![j - 1]!);
-          }
-          if (i > cols - 1 && j > 0) {
-            neighbors.push(cells[i + 1]![j - 1]!);
-          }
-          if (i > 0 && j < rows - 1) {
-            neighbors.push(cells[i - 1]![j + 1]!);
-          }
-          if (i < cols - 1 && j < rows - 1) {
-            neighbors.push(cells[i + 1]![j + 1]!);
-          }
-        }
-      }
-      start = cells[0]![0]!;
-      start.wall = false;
-      end =
-        cells[Math.trunc(p5.random(0, cols - 1))]![
-          Math.trunc(p5.random(0, rows - 1))
-        ]!;
-      //   end = cells[cols - 5]![rows - 5]!;
-      end.wall = false;
+      start = datas[0]![0]!;
+      start.element!.types = CellType.OpenSet;
+      end = datas[endIndexes.endCol]![endIndexes.endRow]!;
+      endCell = cells[endIndexes.endCol]![endIndexes.endRow]!;
+      endCell!.types = CellType.Target;
       openSet.push(start!);
     },
     draw: () => {
@@ -99,7 +94,7 @@ export const Grid = (
         for (let i = 0; i < openSet.length; i++) {
           const cell = openSet[i]!;
           const winnerCell = openSet[winner]!;
-          if (cell.data.f < winnerCell.data.f) {
+          if (cell.f < winnerCell.f) {
             winner = i;
           }
         }
@@ -108,33 +103,35 @@ export const Grid = (
           p5.noLoop();
         }
         path = [];
-        let tmp = current;
+        let tmp = current.element!;
         path.push(tmp);
-        while (tmp.previous) {
-          path.push(tmp.previous);
-          tmp = tmp.previous;
+        while (tmp.data.previous) {
+          path.push(tmp.data.previous.element!);
+          tmp = tmp.data.previous.element!;
         }
         removeFromArray(openSet, current);
         closeSet.push(current);
+        current.element!.types = CellType.OpenSet;
         const neighbors = current.neighbors;
         for (let i = 0; i < neighbors.length; i++) {
           const neighbor = neighbors[i]!;
-          if (!neighbor.wall && !closeSet.includes(neighbor)) {
-            const tentative_gScore = current.data.g + 1;
+          if (!neighbor) continue;
+          if (!closeSet.includes(neighbor)) {
+            const tentative_gScore = current.g + 1;
             let newPath = false;
             if (openSet.includes(neighbor)) {
-              if (tentative_gScore < neighbor.data.g) {
-                neighbor.data.g = tentative_gScore;
+              if (tentative_gScore < neighbor.g) {
+                neighbor.g = tentative_gScore;
                 newPath = true;
               }
             } else {
-              neighbor.data.g = tentative_gScore;
+              neighbor.g = tentative_gScore;
               newPath = true;
               openSet.push(neighbor);
             }
             if (newPath) {
-              neighbor.data.h = heuristic(neighbor, end!);
-              neighbor.data.f = neighbor.data.g + neighbor.data.h;
+              neighbor.h = neighbor.getDistance(endCell!);
+              neighbor.f = neighbor.g + neighbor.h;
               neighbor.previous = current;
             }
           }
@@ -143,30 +140,22 @@ export const Grid = (
         p5.noLoop();
         return;
       }
-      p5.background(0);
-      for (let i = 0; i < cols; i++) {
-        for (let j = 0; j < rows; j++) {
-          const cell = cells[i]![j]!;
-          drawer.draw(cell);
-        }
-      }
-      for (let i = 0; i < closeSet.length; i++) {
-        const cell = closeSet[i]!;
-        if (cell == end) continue;
-        cell.color = p5.color(255, 0, 0);
-        drawer.draw(cell);
-      }
-
-      for (let i = 0; i < openSet.length; i++) {
-        const cell = openSet[i]!;
-        if (cell == end) continue;
-        cell.color = p5.color(0, 255, 0);
-        drawer.draw(cell);
-      }
-
-      drawer.drawLine(path);
-
-      end!.color = p5.color(123, 0, 123);
+      p5.background(255);
+      endCell!.types = CellType.Target;
+      
+      drawer.drawCells(
+        p5,
+        cells.flatMap((c) => c),
+        width,
+        height
+      );
+      drawer.drawWalls(
+        p5,
+        walls.flatMap((w) => w),
+        width,
+        height
+      );
+      drawer.drawPath(p5, path, width, height);
     },
   };
 };
