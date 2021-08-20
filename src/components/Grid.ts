@@ -22,7 +22,7 @@ export const Grid = (
   canvasSize: () => ISize
 ): IRenderable => {
   const cells: ICell[][] = Array<Array<ICell>>(cols);
-  const walls: ICellElement[][] = Array<Array<ICellElement>>(cols);
+  const walls: ICellElement[] = [];
   const datas: ICellPathFinderData[][] =
     Array<Array<ICellPathFinderData>>(cols);
   const openSet: ICellPathFinderData[] = [];
@@ -42,7 +42,6 @@ export const Grid = (
 
       for (let col = 0; col < cols; col++) {
         cells[col] = new Array<ICell>(rows);
-        walls[col] = new Array<ICellElement>(rows);
         datas[col] = new Array<ICellPathFinderData>(rows);
         for (let row = 0; row < rows; row++) {
           const isWall = Math.random() < wallPercentage;
@@ -54,7 +53,7 @@ export const Grid = (
               col,
               row,
             };
-            walls[col]![row] = wall;
+            walls.push(wall);
             continue;
           }
           const data: ICellPathFinderData = {
@@ -150,7 +149,7 @@ export const Grid = (
       );
       drawer.drawWalls(
         p5,
-        walls.flatMap((w) => w),
+        walls,
         width,
         height
       );
