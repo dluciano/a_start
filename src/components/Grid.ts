@@ -7,14 +7,78 @@ import {
   ISize,
   IWall,
 } from "./interfaces";
-import {
-  euclideanDistance,
-  removeFromArray,
-  setNeighbors,
-} from "./Cell";
+import { euclideanDistance, removeFromArray, setNeighbors } from "./Cell";
 
 import { Drawer } from "./Drawer";
 import p5 from "p5";
+
+type AAsteriskData = {
+  openSet: ICellPathFinderData[];
+  closeSet: ICellPathFinderData[];
+  path: ICell[];
+  end: ICellPathFinderData;
+  endCell: ICell;  
+};
+const AAsterisk = (
+  p5: p5,
+  { openSet, closeSet, path, end, endCell }: AAsteriskData
+) => {  
+  if (openSet.length > 0) {
+    let winner = 0;
+    for (let i = 0; i < openSet.length; i++) {
+      const cell = openSet[i]!;
+      const winnerCell = openSet[winner]!;
+      if (cell.f < winnerCell.f) {
+        winner = i;
+      }
+    }
+    const current = openSet[winner]!;
+    if (current == end) {
+      //console.log(path)
+      // path = []
+      let tmp = current.element!;
+      path.push(tmp);
+      while (tmp.data.previous) {
+        path.push(tmp.data.previous.element!);
+        tmp = tmp.data.previous.element!;
+      }
+      p5.noLoop();
+      return true;
+    }
+
+    removeFromArray(openSet, current);
+    closeSet.push(current);
+    current.element!.types = CellType.CloseSet;
+    const neighbors = current.neighbors;
+    for (let i = 0; i < neighbors.length; i++) {
+      const neighbor = neighbors[i]!;
+      if (!neighbor) continue;
+      if (!closeSet.includes(neighbor)) {
+        const tentative_gScore = current.g + 1;
+        let newPath = false;
+        if (openSet.includes(neighbor)) {
+          if (tentative_gScore < neighbor.g) {
+            neighbor.g = tentative_gScore;
+            newPath = true;
+          }
+        } else {
+          neighbor.g = tentative_gScore;
+          newPath = true;
+          openSet.push(neighbor);
+          neighbor.element!.types = CellType.OpenSet;
+        }
+        if (newPath) {
+          neighbor.h = neighbor.getDistance(endCell!);
+          neighbor.f = neighbor.g + neighbor.h;
+          neighbor.previous = current;
+        }
+      }
+    }
+  } else {
+    p5.noLoop();
+    return false;
+  }
+};
 
 export const Grid = (
   p5: p5,
@@ -41,6 +105,7 @@ export const Grid = (
   const drawer = Drawer();
   let width = 0;
   let height = 0;
+  let solved = false;
   return {
     setup: () => {
       const r = canvasSize();
@@ -94,68 +159,24 @@ export const Grid = (
       endCell!.types = CellType.Target;
 
       openSet.push(start!);
-      start!.element!.types = CellType.OpenSet;      
+      start!.element!.types = CellType.OpenSet;
     },
     draw: () => {
-      if (openSet.length > 0) {
-        let winner = 0;
-        for (let i = 0; i < openSet.length; i++) {
-          const cell = openSet[i]!;
-          const winnerCell = openSet[winner]!;
-          if (cell.f < winnerCell.f) {
-            winner = i;
-          }
-        }
-        const current = openSet[winner]!;
-        if (current == end) {
-          p5.noLoop();
-        }
-
-        path = [];
-        let tmp = current.element!;
-        path.push(tmp);
-        while (tmp.data.previous) {
-          path.push(tmp.data.previous.element!);
-          tmp = tmp.data.previous.element!;
-        }
-
-        removeFromArray(openSet, current);
-        closeSet.push(current);
-        current.element!.types = CellType.CloseSet;
-        const neighbors = current.neighbors;
-        for (let i = 0; i < neighbors.length; i++) {
-          const neighbor = neighbors[i]!;
-          if (!neighbor) continue;
-          if (!closeSet.includes(neighbor)) {
-            const tentative_gScore = current.g + 1;
-            let newPath = false;
-            if (openSet.includes(neighbor)) {
-              if (tentative_gScore < neighbor.g) {
-                neighbor.g = tentative_gScore;
-                newPath = true;
-              }
-            } else {
-              neighbor.g = tentative_gScore;
-              newPath = true;
-              openSet.push(neighbor);
-              neighbor.element!.types = CellType.OpenSet;
-            }
-            if (newPath) {
-              neighbor.h = neighbor.getDistance(endCell!);
-              neighbor.f = neighbor.g + neighbor.h;
-              neighbor.previous = current;
-            }
-          }
-        }
-      } else {
-        p5.noLoop();
-      }
+      if(!solved){
+        solved = AAsterisk(p5, {
+          openSet,
+          closeSet,
+          path,
+          end: end!,
+          endCell: endCell!,      
+        });
+      }      
       p5.background(255);
       endCell!.types = CellType.Target;
 
       drawer.drawWalls(p5, walls, width, height);
       drawer.drawCells(p5, cells, width, height);
-
+      //console.log(path)
       drawer.drawPath(p5, path, width, height);
     },
   };

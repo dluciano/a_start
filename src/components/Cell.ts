@@ -132,13 +132,13 @@ export const setNeighbors = (
         if (item.position.orientation === ElementOrientation.TopRight) {
           const isBlocked = isBlock(            
             ElementOrientation.TopMiddle,
-            ElementOrientation.CenterLeft
+            ElementOrientation.CenterRight
           );
           if (isBlocked) continue;
         }
         if (item.position.orientation === ElementOrientation.BottomRight) {
           const isBlocked = isBlock(            
-            ElementOrientation.CenterLeft,
+            ElementOrientation.CenterRight,
             ElementOrientation.BottomMiddle
           );
           if (isBlocked) continue;
