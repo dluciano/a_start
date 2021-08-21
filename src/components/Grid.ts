@@ -15,14 +15,18 @@ import p5 from "p5";
 type AAsteriskData = {
   openSet: ICellPathFinderData[];
   closeSet: ICellPathFinderData[];
-  path: ICell[];
   end: ICellPathFinderData;
   endCell: ICell;
 };
+type AAsteriskDataResult = {
+  solved: boolean;
+  doesNotHaveSolution: boolean;
+  path: ICell[];
+};
 const AAsterisk = (
   p5: p5,
-  { openSet, closeSet, path, end, endCell }: AAsteriskData
-) => {
+  { openSet, closeSet, end, endCell }: AAsteriskData
+): AAsteriskDataResult => {
   if (openSet.length > 0) {
     let winner = 0;
     for (let i = 0; i < openSet.length; i++) {
@@ -33,15 +37,20 @@ const AAsterisk = (
       }
     }
     const current = openSet[winner]!;
-    if (current == end) {
-      path.splice(0);
+    const path: ICell[] = [];
       let tmp = current.element!;
       path.push(tmp);
       while (tmp.data.previous) {
         path.push(tmp.data.previous.element!);
         tmp = tmp.data.previous.element!;
       }
-      return true;
+    if (current == end) {
+      
+      return {
+        solved: true,
+        doesNotHaveSolution: false,
+        path,
+      };
     }
 
     removeFromArray(openSet, current);
@@ -72,9 +81,17 @@ const AAsterisk = (
         }
       }
     }
-    return false;
+    return {
+      doesNotHaveSolution: false,
+      path,
+      solved: false,
+    };
   } else {
-    throw new Error("no solution found");
+    return {
+      doesNotHaveSolution: true,
+      path: [],
+      solved: true,
+    };
   }
 };
 
@@ -161,13 +178,15 @@ export const Grid = (
     },
     draw: () => {
       if (!solved) {
-        solved = AAsterisk(p5, {
+        const result = AAsterisk(p5, {
           openSet,
           closeSet,
-          path,
           end: end!,
           endCell: endCell!,
         });
+        path = result.path;
+        
+        solved = result.solved;
       }
       p5.background(255);
       endCell!.types = CellType.Target;
