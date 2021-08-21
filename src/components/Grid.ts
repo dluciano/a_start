@@ -23,15 +23,20 @@ export const Agent = (p5: p5, datas: ICellPathFinderData[][]) => {
   };
 };
 
-const createAgent = (p5: p5, datas: ICellPathFinderData[][]) => {
+const createAgent = (
+  p5: p5,
+  datas: ICellPathFinderData[][],
+  showSets: boolean = false
+) => {
   const result = Agent(p5, datas);
+  if (showSets) {
+    for (const cell of result.openSet) {
+      cell.element!.types = CellType.OpenSet;
+    }
 
-  for (const cell of result.openSet) {
-    cell.element!.types = CellType.OpenSet;
-  }
-
-  for (const cell of result.closeSet) {
-    cell.element!.types = CellType.CloseSet;
+    for (const cell of result.closeSet) {
+      cell.element!.types = CellType.CloseSet;
+    }
   }
 
   result.end!.element!.types = CellType.Target;
@@ -51,7 +56,7 @@ export const Grid = (
   let cellWidth = 0;
   let cellHeight = 0;
   const drawer = Drawer();
-  const paths: ICellElement[][] = [];
+  const paths: { path: ICellElement[]; current: number }[] = [];
 
   return {
     setup: () => {
@@ -93,17 +98,25 @@ export const Grid = (
         }
       }
       setNeighbors(cols, rows, datas);
-      paths.push(createAgent(p5, datas));
-      paths.push(createAgent(p5, datas));
-      paths.push(createAgent(p5, datas));
-      paths.push(createAgent(p5, datas));
+      paths.push({ path: createAgent(p5, datas), current: 0 });
+      paths.push({ path: createAgent(p5, datas), current: 0 });
+      paths.push({ path: createAgent(p5, datas), current: 0 });
+      // p5.frameRate(30);
     },
     draw: () => {
       p5.background(255);
       drawer.drawCells(p5, cells, cellWidth, cellHeight);
+
       for (const path of paths) {
-        drawer.drawPath(p5, path, cellWidth, cellHeight);
+        if (path.current <= path.path.length - 1) {
+          const p: ICellElement[] = path.path.slice(0, path.current)!;
+          path.current = path.current + 1;
+          drawer.drawPath(p5, p, cellWidth, cellHeight);
+        } else {
+          drawer.drawPath(p5, path.path, cellWidth, cellHeight);
+        }
       }
+
       drawer.drawWalls(p5, walls, cellWidth, cellHeight);
     },
   };

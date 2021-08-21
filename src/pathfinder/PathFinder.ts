@@ -58,7 +58,7 @@ export const PathFinder = ({
           closeSet,
           solved: true,
           doesNotHaveSolution: false,
-          path,
+          path: path.reverse(),
         };
       }
 
