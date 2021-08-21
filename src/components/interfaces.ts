@@ -13,9 +13,14 @@ export enum CellType {
   CloseSet = 2,
   Target = 3
 }
-
+export interface IGridPosition {
+  col: number;
+  row: number;
+}
 export interface ICell extends IDrawerObject, ICellElement {
   data: ICellPathFinderData;
+  highlight?: boolean;
+  masterHightlight?: boolean;
   types: CellType
 }
 

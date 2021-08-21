@@ -16,15 +16,18 @@ export const Grid = (
   p5: p5,
   cols: number,
   rows: number,
-  startIndexes: { col: number; row: number },
-  endIndexes: { col: number; row: number },
+  init: {
+    startColIndex: number;
+    startRowIndex: number;
+    endColIndex: number;
+    endRowIndex: number;
+  },
   wallPercentage: number,
   canvasSize: () => ISize
 ): IRenderable => {
   const cells: ICell[] = [];
   const walls: ICellElement[] = [];
-  const datas: ICellPathFinderData[][] =
-    Array<Array<ICellPathFinderData>>(cols);
+  const datas: ICellPathFinderData[][] = Array(cols);
   const openSet: ICellPathFinderData[] = [];
   const closeSet: ICellPathFinderData[] = [];
   let path: ICell[] = [];
@@ -40,14 +43,14 @@ export const Grid = (
       width = r.width / cols;
       height = r.height / rows;
 
-      for (let col = 0; col < cols; col++) {        
-        datas[col] = new Array<ICellPathFinderData>(rows);
+      for (let col = 0; col < cols; col++) {
+        datas[col] = Array(rows);
         for (let row = 0; row < rows; row++) {
           const isWall = Math.random() < wallPercentage;
-          const isStartIndex =
-            col === startIndexes.col && row === startIndexes.row;
-          const isEndIndex = col === endIndexes.col && row === endIndexes.row;
-          if (!isStartIndex && !isEndIndex && isWall) {
+          const isStart =
+            col === init.startColIndex && row === init.startRowIndex;
+          const isTarget = col === init.endColIndex && row === init.endRowIndex;
+          if (isWall && !isStart && !isTarget) {
             const wall: IWall = {
               col,
               row,
@@ -69,18 +72,20 @@ export const Grid = (
             row,
             data,
             types: 0,
+            highlight: false,
           };
           data.element = cell;
-          datas[col]![row] = data;          
+          datas[col]![row] = data;
           cells.push(cell);
         }
       }
       setNeighbors(cols, rows, datas);
 
-      start = datas[startIndexes.col]![startIndexes.row]!;
-      start.element!.types = CellType.OpenSet;
-      end = datas[endIndexes.col]![endIndexes.row]!;
-      endCell = cells[endIndexes.col * endIndexes.row];
+      start = datas[init.startColIndex]![init.startRowIndex];
+      start!.element!.types = CellType.OpenSet;
+
+      end = datas[init.endColIndex]![init.endRowIndex]!;
+      endCell = end.element;
       endCell!.types = CellType.Target;
 
       openSet.push(start!);
@@ -99,6 +104,7 @@ export const Grid = (
         if (current == end) {
           p5.noLoop();
         }
+
         path = [];
         let tmp = current.element!;
         path.push(tmp);
@@ -106,6 +112,7 @@ export const Grid = (
           path.push(tmp.data.previous.element!);
           tmp = tmp.data.previous.element!;
         }
+
         removeFromArray(openSet, current);
         closeSet.push(current);
         current.element!.types = CellType.OpenSet;
@@ -135,18 +142,13 @@ export const Grid = (
         }
       } else {
         p5.noLoop();
-        return;
       }
       p5.background(255);
       endCell!.types = CellType.Target;
 
-      drawer.drawCells(
-        p5,
-        cells.flatMap((c) => c),
-        width,
-        height
-      );
       drawer.drawWalls(p5, walls, width, height);
+      drawer.drawCells(p5, cells, width, height);
+
       drawer.drawPath(p5, path, width, height);
     },
   };
