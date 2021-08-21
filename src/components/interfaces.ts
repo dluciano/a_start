@@ -19,8 +19,8 @@ export interface IGridPosition {
 }
 export interface ICell extends IDrawerObject, ICellElement {
   data: ICellPathFinderData;
-  highlight?: boolean;
-  masterHightlight?: boolean;
+  // highlight?: boolean;
+  // masterHightlight?: boolean;
   types: CellType
 }
 

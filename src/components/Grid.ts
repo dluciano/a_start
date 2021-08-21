@@ -72,7 +72,7 @@ export const Grid = (
             row,
             data,
             types: 0,
-            highlight: false,
+            // highlight: false,
           };
           data.element = cell;
           datas[col]![row] = data;

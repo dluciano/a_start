@@ -83,8 +83,8 @@ export const setNeighbors = (
 
       const positions = getNeighbors(cell.element, cols, rows);
       let current = positions.next();     
-      const isH = cell.element.col === 2 && cell.element.row == 2;
-      if (isH) cell.element.masterHightlight = true;
+      // const isH = cell.element.col === 2 && cell.element.row == 2;
+      // if (isH) cell.element.masterHightlight = true;
       while (!current.done) {
         const position = current.value;        
         const neighbor = cells[position.col]![position.row];
@@ -92,7 +92,7 @@ export const setNeighbors = (
           current = positions.next();
           continue;
         }
-        if (isH) neighbor.element!.highlight = true;
+        // if (isH) neighbor.element!.highlight = true;
         cell.neighbors.push(neighbor!);
         current = positions.next();
       }
