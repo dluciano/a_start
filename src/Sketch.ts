@@ -2,8 +2,8 @@ import { Grid } from "./components/Grid";
 import P5 from "p5";
 
 export const Sketch = (p5: P5) => {
-  const rows = 20;
-  const cols = 20;
+  const rows = 50;
+  const cols = 50;
   const wallPerct = 0.2;
 
   const startColIndex = Math.trunc(p5.random(0, cols - 1));

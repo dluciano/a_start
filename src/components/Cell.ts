@@ -1,11 +1,5 @@
-import {
-  ElementOrientation,
-  ICellElement,
-  ICellPathFinderData,
-  IGridPosition,
-} from "./interfaces";
-
-import p5 from "p5";
+import { ElementOrientation, IGridPosition } from "./interfaces";
+import { ICellElement, ICellPathFinderData } from "../pathfinder";
 
 export const mapPositiontoIndex = (
   pos: IGridPosition,
@@ -105,15 +99,12 @@ export const setNeighbors = (
       while (!current.done) {
         const position = current.value;
         const neighbor = cells[position.col]![position.row];
-        neighbors.push({ neighbor, position });        
+        neighbors.push({ neighbor, position });
         // if (isH) neighbor.element!.highlight = true;
         // cell.neighbors.push(neighbor!);
         current = positions.next();
       }
-      const isBlock = (        
-        a: ElementOrientation,
-        b: ElementOrientation
-      ) => {
+      const isBlock = (a: ElementOrientation, b: ElementOrientation) => {
         const aPos = neighbors.find((c) => c.position.orientation === a);
         const bPos = neighbors.find((c) => c.position.orientation === b);
         if (!aPos?.neighbor && !bPos?.neighbor) return true;
@@ -123,28 +114,28 @@ export const setNeighbors = (
         const neighbor = item.neighbor;
         if (!neighbors) continue;
         if (item.position.orientation === ElementOrientation.TopLeft) {
-          const isBlocked = isBlock(          
+          const isBlocked = isBlock(
             ElementOrientation.TopMiddle,
             ElementOrientation.CenterLeft
           );
           if (isBlocked) continue;
         }
         if (item.position.orientation === ElementOrientation.TopRight) {
-          const isBlocked = isBlock(            
+          const isBlocked = isBlock(
             ElementOrientation.TopMiddle,
             ElementOrientation.CenterRight
           );
           if (isBlocked) continue;
         }
         if (item.position.orientation === ElementOrientation.BottomRight) {
-          const isBlocked = isBlock(            
+          const isBlocked = isBlock(
             ElementOrientation.CenterRight,
             ElementOrientation.BottomMiddle
           );
           if (isBlocked) continue;
         }
         if (item.position.orientation === ElementOrientation.BottomLeft) {
-          const isBlocked = isBlock(            
+          const isBlocked = isBlock(
             ElementOrientation.BottomMiddle,
             ElementOrientation.CenterLeft
           );
@@ -157,26 +148,3 @@ export const setNeighbors = (
     }
   }
 };
-
-export const removeFromArray = <T>(arr: Array<T>, element: any) => {
-  for (let i = arr.length - 1; i >= 0; i--) {
-    if (arr[i] == element) {
-      arr.splice(i, 1);
-    }
-  }
-};
-
-export const euclideanDistance = (
-  p5: p5,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number
-) => p5.dist(x1, y1, x2, y2);
-
-export const taxyCabDistance = (
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number
-) => Math.abs(x1 - x2) + Math.abs(y1 - y2);

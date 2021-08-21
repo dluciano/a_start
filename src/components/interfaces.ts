@@ -1,9 +1,6 @@
-export interface IDrawerObject {}
+import { ICellElement, ICellPathFinderData } from "../pathfinder";
 
-export interface ICellElement {
-  readonly row: number;
-  readonly col: number;
-}
+export interface IDrawerObject {}
 
 export interface IWall extends IDrawerObject, ICellElement {}
 
@@ -30,7 +27,7 @@ export interface IGridPosition {
   orientation: ElementOrientation;
 }
 export interface ICell extends IDrawerObject, ICellElement {
-  data: ICellPathFinderData;
+  data?: ICellPathFinderData;
   // highlight?: boolean;
   // masterHightlight?: boolean;
   types: CellType;
@@ -38,16 +35,6 @@ export interface ICell extends IDrawerObject, ICellElement {
 
 export interface IDrawable {
   draw?: () => void;
-}
-
-export interface ICellPathFinderData {
-  f: number;
-  g: number;
-  h: number;
-  neighbors: ICellPathFinderData[];
-  previous?: ICellPathFinderData;
-  getDistance: (to: ICellElement) => number;
-  element?: ICell;
 }
 
 export interface ISetupable {

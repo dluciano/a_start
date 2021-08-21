@@ -1,5 +1,6 @@
-import { CellType, ICell, ICellElement, IWall } from "./interfaces";
+import { CellType, ICell, IWall } from "./interfaces";
 
+import { ICellElement } from "../pathfinder";
 import p5 from "p5";
 
 // import { mapPositiontoIndex } from "./Cell";
