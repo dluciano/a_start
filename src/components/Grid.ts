@@ -38,14 +38,13 @@ const AAsterisk = (
     }
     const current = openSet[winner]!;
     const path: ICell[] = [];
-      let tmp = current.element!;
-      path.push(tmp);
-      while (tmp.data.previous) {
-        path.push(tmp.data.previous.element!);
-        tmp = tmp.data.previous.element!;
-      }
+    let tmp = current.element!;
+    path.push(tmp);
+    while (tmp.data.previous) {
+      path.push(tmp.data.previous.element!);
+      tmp = tmp.data.previous.element!;
+    }
     if (current == end) {
-      
       return {
         solved: true,
         doesNotHaveSolution: false,
@@ -81,6 +80,7 @@ const AAsterisk = (
         }
       }
     }
+
     return {
       doesNotHaveSolution: false,
       path,
@@ -177,6 +177,8 @@ export const Grid = (
       start!.element!.types = CellType.OpenSet;
     },
     draw: () => {
+      p5.background(255);
+
       if (!solved) {
         const result = AAsterisk(p5, {
           openSet,
@@ -184,16 +186,14 @@ export const Grid = (
           end: end!,
           endCell: endCell!,
         });
-        path = result.path;
-        
         solved = result.solved;
+        path = result.path;
       }
-      p5.background(255);
       endCell!.types = CellType.Target;
-
-      drawer.drawWalls(p5, walls, width, height);
+      
       drawer.drawCells(p5, cells, width, height);
       drawer.drawPath(p5, path, width, height);
+      drawer.drawWalls(p5, walls, width, height);
     },
   };
 };
