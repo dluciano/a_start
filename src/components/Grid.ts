@@ -11,7 +11,6 @@ import {
   euclideanDistance,
   removeFromArray,
   setNeighbors,
-  taxyCabDistance,
 } from "./Cell";
 
 import { Drawer } from "./Drawer";
@@ -95,6 +94,7 @@ export const Grid = (
       endCell!.types = CellType.Target;
 
       openSet.push(start!);
+      start!.element!.types = CellType.OpenSet;      
     },
     draw: () => {
       if (openSet.length > 0) {
@@ -121,7 +121,7 @@ export const Grid = (
 
         removeFromArray(openSet, current);
         closeSet.push(current);
-        current.element!.types = CellType.OpenSet;
+        current.element!.types = CellType.CloseSet;
         const neighbors = current.neighbors;
         for (let i = 0; i < neighbors.length; i++) {
           const neighbor = neighbors[i]!;
@@ -138,6 +138,7 @@ export const Grid = (
               neighbor.g = tentative_gScore;
               newPath = true;
               openSet.push(neighbor);
+              neighbor.element!.types = CellType.OpenSet;
             }
             if (newPath) {
               neighbor.h = neighbor.getDistance(endCell!);

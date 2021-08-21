@@ -1,4 +1,9 @@
-import { ICellElement, ICellPathFinderData, IGridPosition } from "./interfaces";
+import {
+  ElementOrientation,
+  ICellElement,
+  ICellPathFinderData,
+  IGridPosition,
+} from "./interfaces";
 
 import p5 from "p5";
 
@@ -15,6 +20,7 @@ function* getNeighbors(element: ICellElement, cols: number, rows: number) {
     const topMiddle: IGridPosition = {
       col: element.col,
       row: element.row - 1,
+      orientation: ElementOrientation.TopMiddle,
     };
     yield topMiddle;
   }
@@ -22,6 +28,7 @@ function* getNeighbors(element: ICellElement, cols: number, rows: number) {
     const topRight: IGridPosition = {
       col: element.col + 1,
       row: element.row - 1,
+      orientation: ElementOrientation.TopRight,
     };
     yield topRight;
   }
@@ -29,6 +36,7 @@ function* getNeighbors(element: ICellElement, cols: number, rows: number) {
     const centerRight: IGridPosition = {
       col: element.col + 1,
       row: element.row,
+      orientation: ElementOrientation.CenterRight,
     };
     yield centerRight;
   }
@@ -36,6 +44,7 @@ function* getNeighbors(element: ICellElement, cols: number, rows: number) {
     const bottomRight: IGridPosition = {
       col: element.col + 1,
       row: element.row + 1,
+      orientation: ElementOrientation.BottomRight,
     };
     yield bottomRight;
   }
@@ -43,6 +52,7 @@ function* getNeighbors(element: ICellElement, cols: number, rows: number) {
     const bottomMiddle: IGridPosition = {
       col: element.col,
       row: element.row + 1,
+      orientation: ElementOrientation.BottomMiddle,
     };
     yield bottomMiddle;
   }
@@ -50,6 +60,7 @@ function* getNeighbors(element: ICellElement, cols: number, rows: number) {
     const bottomLeft: IGridPosition = {
       col: element.col - 1,
       row: element.row + 1,
+      orientation: ElementOrientation.BottomLeft,
     };
     yield bottomLeft;
   }
@@ -57,6 +68,7 @@ function* getNeighbors(element: ICellElement, cols: number, rows: number) {
     const centerLeft: IGridPosition = {
       col: element.col - 1,
       row: element.row,
+      orientation: ElementOrientation.CenterLeft,
     };
     yield centerLeft;
   }
@@ -64,6 +76,7 @@ function* getNeighbors(element: ICellElement, cols: number, rows: number) {
     const topLeft: IGridPosition = {
       col: element.col - 1,
       row: element.row - 1,
+      orientation: ElementOrientation.TopLeft,
     };
     yield topLeft;
   }
@@ -78,23 +91,68 @@ export const setNeighbors = (
     const rowCells = cells[col]!;
     for (let row = 0; row < rowCells.length; row++) {
       const cell = rowCells[row]!;
-      if(!cell) continue;
+      if (!cell) continue;
       if (!cell.element) continue;
 
       const positions = getNeighbors(cell.element, cols, rows);
-      let current = positions.next();     
+      let current = positions.next();
+      const neighbors = Array<{
+        neighbor: ICellPathFinderData | undefined;
+        position: IGridPosition;
+      }>();
       // const isH = cell.element.col === 2 && cell.element.row == 2;
       // if (isH) cell.element.masterHightlight = true;
       while (!current.done) {
-        const position = current.value;        
+        const position = current.value;
         const neighbor = cells[position.col]![position.row];
-        if (!neighbor) {
-          current = positions.next();
-          continue;
-        }
+        neighbors.push({ neighbor, position });        
         // if (isH) neighbor.element!.highlight = true;
-        cell.neighbors.push(neighbor!);
+        // cell.neighbors.push(neighbor!);
         current = positions.next();
+      }
+      const isBlock = (        
+        a: ElementOrientation,
+        b: ElementOrientation
+      ) => {
+        const aPos = neighbors.find((c) => c.position.orientation === a);
+        const bPos = neighbors.find((c) => c.position.orientation === b);
+        if (!aPos?.neighbor && !bPos?.neighbor) return true;
+        return false;
+      };
+      for (const item of neighbors) {
+        const neighbor = item.neighbor;
+        if (!neighbors) continue;
+        if (item.position.orientation === ElementOrientation.TopLeft) {
+          const isBlocked = isBlock(          
+            ElementOrientation.TopMiddle,
+            ElementOrientation.CenterLeft
+          );
+          if (isBlocked) continue;
+        }
+        if (item.position.orientation === ElementOrientation.TopRight) {
+          const isBlocked = isBlock(            
+            ElementOrientation.TopMiddle,
+            ElementOrientation.CenterLeft
+          );
+          if (isBlocked) continue;
+        }
+        if (item.position.orientation === ElementOrientation.BottomRight) {
+          const isBlocked = isBlock(            
+            ElementOrientation.CenterLeft,
+            ElementOrientation.BottomMiddle
+          );
+          if (isBlocked) continue;
+        }
+        if (item.position.orientation === ElementOrientation.BottomLeft) {
+          const isBlocked = isBlock(            
+            ElementOrientation.BottomMiddle,
+            ElementOrientation.CenterLeft
+          );
+          if (isBlocked) continue;
+        }
+        if (neighbor) {
+          cell.neighbors.push(neighbor!);
+        }
       }
     }
   }
@@ -120,5 +178,5 @@ export const taxyCabDistance = (
   x1: number,
   y1: number,
   x2: number,
-  y2: number) =>
-  Math.abs(x1 - x2) + Math.abs(y1 - y2);
+  y2: number
+) => Math.abs(x1 - x2) + Math.abs(y1 - y2);

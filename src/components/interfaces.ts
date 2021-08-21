@@ -11,17 +11,29 @@ export enum CellType {
   None = 0,
   OpenSet = 1,
   CloseSet = 2,
-  Target = 3
+  Target = 3,
+}
+
+export enum ElementOrientation {
+  TopMiddle,
+  TopRight,
+  CenterRight,
+  BottomRight,
+  BottomMiddle,
+  BottomLeft,
+  CenterLeft,
+  TopLeft,  
 }
 export interface IGridPosition {
   col: number;
   row: number;
+  orientation: ElementOrientation;
 }
 export interface ICell extends IDrawerObject, ICellElement {
   data: ICellPathFinderData;
   // highlight?: boolean;
   // masterHightlight?: boolean;
-  types: CellType
+  types: CellType;
 }
 
 export interface IDrawable {
@@ -35,7 +47,7 @@ export interface ICellPathFinderData {
   neighbors: ICellPathFinderData[];
   previous?: ICellPathFinderData;
   getDistance: (to: ICellElement) => number;
-  element?: ICell
+  element?: ICell;
 }
 
 export interface ISetupable {

@@ -1,7 +1,8 @@
 import { CellType, ICell, ICellElement, IWall } from "./interfaces";
 
-import { mapPositiontoIndex } from "./Cell";
 import p5 from "p5";
+
+// import { mapPositiontoIndex } from "./Cell";
 
 export const Drawer = () => {
   return {
@@ -12,7 +13,7 @@ export const Drawer = () => {
             p5.fill(p5.color(123, 0, 123));
             break;
           case CellType.CloseSet:
-            p5.fill(p5.color(256, 0, 0));
+            p5.fill(p5.color(255, 0, 0));
             break;
           case CellType.OpenSet:
             p5.fill(p5.color(0, 255, 0));
@@ -32,8 +33,8 @@ export const Drawer = () => {
         //   p5.strokeWeight(1);
         // }
 
-        p5.stroke(100);
-          p5.strokeWeight(1);
+        // p5.stroke(100);
+        p5.strokeWeight(0);
 
         p5.rect(cell.col * width, cell.row * height, width, height);
 
@@ -56,9 +57,10 @@ export const Drawer = () => {
     },
     drawWalls: (p5: p5, walls: IWall[], width: number, height: number) => {
       for (const wall of walls) {
-        p5.fill(0);        
+        p5.fill(0);
+        p5.strokeWeight(0);
         p5.rect(wall.col * width, wall.row * height, width, height);
-        
+
         // p5.fill(255);
         // p5.stroke(255);
         // p5.textSize(12);
@@ -84,20 +86,19 @@ export const Drawer = () => {
         p5.vertex(cell.col * width + width / 2, cell.row * height + height / 2);
       }
       p5.endShape();
-
-      let i = objects.length;
-      p5.fill(0);
-      p5.stroke(0);
-      p5.strokeWeight(1);
-      for (const cell of objects) {
-        p5.textSize(12);
-        p5.text(
-          `${i}`,
-          cell.col * width + width / 2,
-          cell.row * height + height / 2 + 10
-        );
-        i--;
-      }
+      // let i = objects.length;
+      // p5.fill(0);
+      // p5.stroke(0);
+      // p5.strokeWeight(1);
+      // for (const cell of objects) {
+      //   p5.textSize(12);
+      //   p5.text(
+      //     `${i}`,
+      //     cell.col * width + width / 2,
+      //     cell.row * height + height / 2 + 10
+      //   );
+      //   i--;
+      // }
     },
   };
 };
