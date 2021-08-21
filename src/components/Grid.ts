@@ -17,12 +17,12 @@ type AAsteriskData = {
   closeSet: ICellPathFinderData[];
   path: ICell[];
   end: ICellPathFinderData;
-  endCell: ICell;  
+  endCell: ICell;
 };
 const AAsterisk = (
   p5: p5,
   { openSet, closeSet, path, end, endCell }: AAsteriskData
-) => {  
+) => {
   if (openSet.length > 0) {
     let winner = 0;
     for (let i = 0; i < openSet.length; i++) {
@@ -34,15 +34,13 @@ const AAsterisk = (
     }
     const current = openSet[winner]!;
     if (current == end) {
-      //console.log(path)
-      // path = []
+      path.splice(0);
       let tmp = current.element!;
       path.push(tmp);
       while (tmp.data.previous) {
         path.push(tmp.data.previous.element!);
         tmp = tmp.data.previous.element!;
       }
-      p5.noLoop();
       return true;
     }
 
@@ -74,9 +72,9 @@ const AAsterisk = (
         }
       }
     }
-  } else {
-    p5.noLoop();
     return false;
+  } else {
+    throw new Error("no solution found");
   }
 };
 
@@ -162,21 +160,20 @@ export const Grid = (
       start!.element!.types = CellType.OpenSet;
     },
     draw: () => {
-      if(!solved){
+      if (!solved) {
         solved = AAsterisk(p5, {
           openSet,
           closeSet,
           path,
           end: end!,
-          endCell: endCell!,      
+          endCell: endCell!,
         });
-      }      
+      }
       p5.background(255);
       endCell!.types = CellType.Target;
 
       drawer.drawWalls(p5, walls, width, height);
       drawer.drawCells(p5, cells, width, height);
-      //console.log(path)
       drawer.drawPath(p5, path, width, height);
     },
   };
