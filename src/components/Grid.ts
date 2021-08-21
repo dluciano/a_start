@@ -24,7 +24,6 @@ type AAsteriskDataResult = {
   path: ICell[];
 };
 const AAsterisk = (
-  p5: p5,
   { openSet, closeSet, end, endCell }: AAsteriskData
 ): AAsteriskDataResult => {
   if (openSet.length > 0) {
@@ -180,7 +179,7 @@ export const Grid = (
       p5.background(255);
 
       if (!solved) {
-        const result = AAsterisk(p5, {
+        const result = AAsterisk({
           openSet,
           closeSet,
           end: end!,
