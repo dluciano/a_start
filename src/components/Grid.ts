@@ -7,7 +7,12 @@ import {
   ISize,
   IWall,
 } from "./interfaces";
-import { euclideanDistance, removeFromArray, setNeighbors } from "./Cell";
+import {
+  euclideanDistance,
+  removeFromArray,
+  setNeighbors,
+  taxyCabDistance,
+} from "./Cell";
 
 import { Drawer } from "./Drawer";
 import p5 from "p5";
@@ -65,6 +70,7 @@ export const Grid = (
             neighbors: [],
             previous: undefined,
             getDistance: (to: ICellElement) =>
+              // taxyCabDistance(col, row, to.row, to.col),
               euclideanDistance(p5, col, row, to.row, to.col),
           };
           const cell: ICell = {

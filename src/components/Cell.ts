@@ -116,5 +116,9 @@ export const euclideanDistance = (
   y2: number
 ) => p5.dist(x1, y1, x2, y2);
 
-export const taxyCabDistance = (a: ICellElement, b: ICellElement) =>
-  Math.abs(a.col - b.col) + Math.abs(a.row - b.row);
+export const taxyCabDistance = (
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number) =>
+  Math.abs(x1 - x2) + Math.abs(y1 - y2);
