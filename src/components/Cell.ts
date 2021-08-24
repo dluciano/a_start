@@ -9,23 +9,24 @@ export const mapPositiontoIndex = (
   return (pos.row % rows) + pos.col * cols;
 };
 
-type Neighbor = {
-  neighbor: ICellPathFinderData | undefined;
+type AdjecentCell = {
+  cell: ICellPathFinderData | undefined;
   position: IGridPosition;
 };
 
-function* getAdjacentCellPositionsIterator(
+const getAdjacentCellPositions = (
   element: ICellElement,
   cols: number,
   rows: number
-) {
+): IGridPosition[] => {
+  const adjecentPositions: IGridPosition[] = [];
   if (element.row > 0) {
     const topMiddle: IGridPosition = {
       col: element.col,
       row: element.row - 1,
       orientation: ElementOrientation.TopMiddle,
     };
-    yield topMiddle;
+    adjecentPositions.push(topMiddle);
   }
   if (element.col < cols - 1 && element.row > 0) {
     const topRight: IGridPosition = {
@@ -33,7 +34,7 @@ function* getAdjacentCellPositionsIterator(
       row: element.row - 1,
       orientation: ElementOrientation.TopRight,
     };
-    yield topRight;
+    adjecentPositions.push(topRight);
   }
   if (element.col < cols - 1) {
     const centerRight: IGridPosition = {
@@ -41,7 +42,7 @@ function* getAdjacentCellPositionsIterator(
       row: element.row,
       orientation: ElementOrientation.CenterRight,
     };
-    yield centerRight;
+    adjecentPositions.push(centerRight);
   }
   if (element.col < cols - 1 && element.row < rows - 1) {
     const bottomRight: IGridPosition = {
@@ -49,7 +50,7 @@ function* getAdjacentCellPositionsIterator(
       row: element.row + 1,
       orientation: ElementOrientation.BottomRight,
     };
-    yield bottomRight;
+    adjecentPositions.push(bottomRight);
   }
   if (element.row < rows - 1) {
     const bottomMiddle: IGridPosition = {
@@ -57,7 +58,7 @@ function* getAdjacentCellPositionsIterator(
       row: element.row + 1,
       orientation: ElementOrientation.BottomMiddle,
     };
-    yield bottomMiddle;
+    adjecentPositions.push(bottomMiddle);
   }
   if (element.col > 0 && element.row < rows - 1) {
     const bottomLeft: IGridPosition = {
@@ -65,7 +66,7 @@ function* getAdjacentCellPositionsIterator(
       row: element.row + 1,
       orientation: ElementOrientation.BottomLeft,
     };
-    yield bottomLeft;
+    adjecentPositions.push(bottomLeft);
   }
   if (element.col > 0) {
     const centerLeft: IGridPosition = {
@@ -73,7 +74,7 @@ function* getAdjacentCellPositionsIterator(
       row: element.row,
       orientation: ElementOrientation.CenterLeft,
     };
-    yield centerLeft;
+    adjecentPositions.push(centerLeft);
   }
   if (element.col > 0 && element.row > 0) {
     const topLeft: IGridPosition = {
@@ -81,19 +82,51 @@ function* getAdjacentCellPositionsIterator(
       row: element.row - 1,
       orientation: ElementOrientation.TopLeft,
     };
-    yield topLeft;
+    adjecentPositions.push(topLeft);
   }
-}
+  return adjecentPositions;
+};
 
 const isBlock = (
-  neighbors: Neighbor[],
+  neighbors: AdjecentCell[],
   a: ElementOrientation,
   b: ElementOrientation
 ) => {
   const aPos = neighbors.find((c) => c.position.orientation === a);
   const bPos = neighbors.find((c) => c.position.orientation === b);
-  if (!aPos?.neighbor && !bPos?.neighbor) return true;
-  return false;
+  return !aPos?.cell && !bPos?.cell;
+};
+
+const getPositionBlockers = ({ position: { orientation } }: AdjecentCell) => {
+  switch (orientation) {
+    case ElementOrientation.TopLeft:
+      return [ElementOrientation.TopMiddle, ElementOrientation.CenterLeft];
+    case ElementOrientation.TopRight:
+      return [ElementOrientation.TopMiddle, ElementOrientation.CenterRight];
+    case ElementOrientation.BottomRight:
+      return [ElementOrientation.CenterRight, ElementOrientation.BottomMiddle];
+    case ElementOrientation.BottomLeft:
+      return [ElementOrientation.BottomMiddle, ElementOrientation.CenterLeft];
+    default:
+      return [];
+  }
+};
+
+const getAdjecentCells = (
+  cols: number,
+  rows: number,
+  cells: ICellPathFinderData[][],
+  { element }: ICellPathFinderData
+): AdjecentCell[] => {
+  const positions = getAdjacentCellPositions(element, cols, rows);
+  const adjectentCells: AdjecentCell[] = [];
+
+  for (const position of positions) {
+    const adjecentCell = cells[position.col]![position.row];
+    adjectentCells.push({ cell: adjecentCell, position });
+  }
+
+  return adjectentCells;
 };
 
 export const setNeighbors = (
@@ -107,59 +140,18 @@ export const setNeighbors = (
       const cell = rowCells[row]!;
       if (!cell || !cell.element) continue;
 
-      const positions = getAdjacentCellPositionsIterator(cell.element, cols, rows);
-      let current = positions.next();
-      const neighbors: Neighbor[] = [];
-      // const isH = cell.element.col === 2 && cell.element.row == 2;
-      // if (isH) cell.element.masterHightlight = true;
+      const adjecentCells: AdjecentCell[] = getAdjecentCells(
+        cols,
+        rows,
+        cells,
+        cell
+      );
 
-      while (!current.done) {
-        const position = current.value;
-        const neighbor = cells[position.col]![position.row];
-        neighbors.push({ neighbor, position });
-        // if (isH) neighbor.element!.highlight = true;
-        cell.neighbors.push(neighbor!);
-        current = positions.next();
-      }
-
-      for (const item of neighbors) {
-        const neighbor = item.neighbor;
-        if (!neighbors) continue;
-
-        if (item.position.orientation === ElementOrientation.TopLeft) {
-          const isBlocked = isBlock(neighbors,
-            ElementOrientation.TopMiddle,
-            ElementOrientation.CenterLeft
-          );
-          if (isBlocked) continue;
-        }
-        if (item.position.orientation === ElementOrientation.TopRight) {
-          const isBlocked = isBlock(
-            neighbors,
-            ElementOrientation.TopMiddle,
-            ElementOrientation.CenterRight
-          );
-          if (isBlocked) continue;
-        }
-        if (item.position.orientation === ElementOrientation.BottomRight) {
-          const isBlocked = isBlock(
-            neighbors,
-            ElementOrientation.CenterRight,
-            ElementOrientation.BottomMiddle
-          );
-          if (isBlocked) continue;
-        }
-        if (item.position.orientation === ElementOrientation.BottomLeft) {
-          const isBlocked = isBlock(
-            neighbors,
-            ElementOrientation.BottomMiddle,
-            ElementOrientation.CenterLeft
-          );
-          if (isBlocked) continue;
-        }
-        if (neighbor) {
-          cell.neighbors.push(neighbor!);
-        }
+      for (const adjecentCell of adjecentCells) {
+        const blockerPositions = getPositionBlockers(adjecentCell);
+        if (blockerPositions && blockerPositions.length > 0)
+          isBlock(adjecentCells, blockerPositions[0]!, blockerPositions[1]!);
+        cell.neighbors.push(adjecentCell.cell!);
       }
     }
   }
