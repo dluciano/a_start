@@ -88,13 +88,13 @@ const getAdjacentCellPositions = (
 };
 
 const isBlock = (
-  neighbors: AdjecentCell[],
+  cells: AdjecentCell[],
   a: ElementOrientation,
   b: ElementOrientation
 ) => {
-  const aPos = neighbors.find((c) => c.position.orientation === a);
-  const bPos = neighbors.find((c) => c.position.orientation === b);
-  return !aPos?.cell && !bPos?.cell;
+  const cellA = cells.find((c) => c.position.orientation === a);
+  const cellB = cells.find((c) => c.position.orientation === b);
+  return !cellA?.cell && !cellB?.cell;
 };
 
 const getPositionBlockers = ({ position: { orientation } }: AdjecentCell) => {
@@ -149,8 +149,13 @@ export const setNeighbors = (
 
       for (const adjecentCell of adjecentCells) {
         const blockerPositions = getPositionBlockers(adjecentCell);
-        if (blockerPositions && blockerPositions.length > 0)
-          isBlock(adjecentCells, blockerPositions[0]!, blockerPositions[1]!);
+        if (
+          blockerPositions &&
+          blockerPositions.length > 0 &&
+          isBlock(adjecentCells, blockerPositions[0]!, blockerPositions[1]!)
+        )
+          continue;
+
         cell.neighbors.push(adjecentCell.cell!);
       }
     }
