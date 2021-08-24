@@ -1,5 +1,5 @@
 import {
-  AAsteriskDataResult,
+  AStartDataResult,
   ICellElement,
   ICellPathFinderData,
   PathFinder,
@@ -47,7 +47,7 @@ const createAgent = (
 };
 
 type AgentPath = {
-  result: AAsteriskDataResult;
+  result: AStartDataResult;
   current: number;
 };
 

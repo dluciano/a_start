@@ -14,12 +14,12 @@ export interface ICellPathFinderData {
   element: ICellElement;
 }
 
-export type AAsteriskRequest = {
+export type AStartRequest = {
   start: ICellPathFinderData;
   end: ICellPathFinderData;
 };
 
-export type AAsteriskDataResult = {
+export type AStartDataResult = {
   solved: boolean;
   doesNotHaveSolution: boolean;
   openSet: ICellPathFinderData[];
@@ -27,10 +27,7 @@ export type AAsteriskDataResult = {
   path: ICellPathFinderData[];
 };
 
-export const PathFinder = ({
-  start,
-  end,
-}: AAsteriskRequest): AAsteriskDataResult => {
+export const PathFinder = ({ start, end }: AStartRequest): AStartDataResult => {
   const openSet: ICellPathFinderData[] = [];
   const closeSet: ICellPathFinderData[] = [];
   openSet.push(start!);
@@ -46,16 +43,17 @@ export const PathFinder = ({
       }
 
       const current = openSet[winner]!;
-      const path: ICellPathFinderData[] = [];
-      let tmp = current;
-      path.push(tmp);
-
-      while (tmp.previous) {
-        path.push(tmp.previous);
-        tmp = tmp.previous;
-      }
 
       if (current == end) {
+        const path: ICellPathFinderData[] = [];
+        let tmp = current;
+        path.push(tmp);
+
+        while (tmp.previous) {
+          path.push(tmp.previous);
+          tmp = tmp.previous;
+        }
+
         return {
           openSet,
           closeSet,
