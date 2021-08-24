@@ -1,8 +1,8 @@
-import { ElementOrientation, IGridPosition } from "./interfaces";
 import { ICellElement, ICellPathFinderData } from "../pathfinder";
+import { IGridElement, Position } from "./interfaces";
 
 export const mapPositiontoIndex = (
-  pos: IGridPosition,
+  pos: IGridElement,
   cols: number,
   rows: number
 ) => {
@@ -11,76 +11,76 @@ export const mapPositiontoIndex = (
 
 type AdjecentCell = {
   cell: ICellPathFinderData | undefined;
-  position: IGridPosition;
+  element: IGridElement;
 };
 
 const getAdjacentCellPositions = (
   element: ICellElement,
   cols: number,
   rows: number
-): IGridPosition[] => {
-  const adjecentPositions: IGridPosition[] = [];
+): IGridElement[] => {
+  const adjecentPositions: IGridElement[] = [];
   if (element.row > 0) {
-    const topMiddle: IGridPosition = {
+    const topMiddle: IGridElement = {
       col: element.col,
       row: element.row - 1,
-      orientation: ElementOrientation.TopMiddle,
+      position: Position.TopMiddle,
     };
     adjecentPositions.push(topMiddle);
   }
   if (element.col < cols - 1 && element.row > 0) {
-    const topRight: IGridPosition = {
+    const topRight: IGridElement = {
       col: element.col + 1,
       row: element.row - 1,
-      orientation: ElementOrientation.TopRight,
+      position: Position.TopRight,
     };
     adjecentPositions.push(topRight);
   }
   if (element.col < cols - 1) {
-    const centerRight: IGridPosition = {
+    const centerRight: IGridElement = {
       col: element.col + 1,
       row: element.row,
-      orientation: ElementOrientation.CenterRight,
+      position: Position.CenterRight,
     };
     adjecentPositions.push(centerRight);
   }
   if (element.col < cols - 1 && element.row < rows - 1) {
-    const bottomRight: IGridPosition = {
+    const bottomRight: IGridElement = {
       col: element.col + 1,
       row: element.row + 1,
-      orientation: ElementOrientation.BottomRight,
+      position: Position.BottomRight,
     };
     adjecentPositions.push(bottomRight);
   }
   if (element.row < rows - 1) {
-    const bottomMiddle: IGridPosition = {
+    const bottomMiddle: IGridElement = {
       col: element.col,
       row: element.row + 1,
-      orientation: ElementOrientation.BottomMiddle,
+      position: Position.BottomMiddle,
     };
     adjecentPositions.push(bottomMiddle);
   }
   if (element.col > 0 && element.row < rows - 1) {
-    const bottomLeft: IGridPosition = {
+    const bottomLeft: IGridElement = {
       col: element.col - 1,
       row: element.row + 1,
-      orientation: ElementOrientation.BottomLeft,
+      position: Position.BottomLeft,
     };
     adjecentPositions.push(bottomLeft);
   }
   if (element.col > 0) {
-    const centerLeft: IGridPosition = {
+    const centerLeft: IGridElement = {
       col: element.col - 1,
       row: element.row,
-      orientation: ElementOrientation.CenterLeft,
+      position: Position.CenterLeft,
     };
     adjecentPositions.push(centerLeft);
   }
   if (element.col > 0 && element.row > 0) {
-    const topLeft: IGridPosition = {
+    const topLeft: IGridElement = {
       col: element.col - 1,
       row: element.row - 1,
-      orientation: ElementOrientation.TopLeft,
+      position: Position.TopLeft,
     };
     adjecentPositions.push(topLeft);
   }
@@ -89,24 +89,26 @@ const getAdjacentCellPositions = (
 
 const isBlock = (
   cells: AdjecentCell[],
-  orientationA: ElementOrientation,
-  orientationB: ElementOrientation
+  orientationA: Position,
+  orientationB: Position
 ) => {
-  const cellA = cells.find((c) => c.position.orientation === orientationA);
-  const cellB = cells.find((c) => c.position.orientation === orientationB);
+  const cellA = cells.find((c) => c.element.position === orientationA);
+  const cellB = cells.find((c) => c.element.position === orientationB);
   return !cellA?.cell && !cellB?.cell;
 };
 
-const getPositionBlockers = ({ position: { orientation } }: AdjecentCell) => {
+const getPositionBlockers = ({
+  element: { position: orientation },
+}: AdjecentCell) => {
   switch (orientation) {
-    case ElementOrientation.TopLeft:
-      return [ElementOrientation.TopMiddle, ElementOrientation.CenterLeft];
-    case ElementOrientation.TopRight:
-      return [ElementOrientation.TopMiddle, ElementOrientation.CenterRight];
-    case ElementOrientation.BottomRight:
-      return [ElementOrientation.CenterRight, ElementOrientation.BottomMiddle];
-    case ElementOrientation.BottomLeft:
-      return [ElementOrientation.BottomMiddle, ElementOrientation.CenterLeft];
+    case Position.TopLeft:
+      return [Position.TopMiddle, Position.CenterLeft];
+    case Position.TopRight:
+      return [Position.TopMiddle, Position.CenterRight];
+    case Position.BottomRight:
+      return [Position.CenterRight, Position.BottomMiddle];
+    case Position.BottomLeft:
+      return [Position.BottomMiddle, Position.CenterLeft];
     default:
       return [];
   }
@@ -123,7 +125,7 @@ const getAdjecentCells = (
 
   for (const position of positions) {
     const adjecentCell = cells[position.col]![position.row];
-    adjectentCells.push({ cell: adjecentCell, position });
+    adjectentCells.push({ cell: adjecentCell, element: position });
   }
 
   return adjectentCells;

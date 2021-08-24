@@ -11,7 +11,7 @@ export enum CellType {
   Target = 3,
 }
 
-export enum ElementOrientation {
+export enum Position {
   TopMiddle,
   TopRight,
   CenterRight,
@@ -21,10 +21,10 @@ export enum ElementOrientation {
   CenterLeft,
   TopLeft,  
 }
-export interface IGridPosition {
+export interface IGridElement {
   col: number;
   row: number;
-  orientation: ElementOrientation;
+  position: Position;
 }
 export interface ICell extends IDrawerObject, ICellElement {
   data?: ICellPathFinderData;
