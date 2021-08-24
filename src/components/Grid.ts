@@ -1,16 +1,19 @@
+import {
+  AAsteriskDataResult,
+  ICellElement,
+  ICellPathFinderData,
+  PathFinder,
+} from "../pathfinder";
 import { CellType, ICell, IRenderable, ISize, IWall } from "./interfaces";
-import { ICellElement, ICellPathFinderData, PathFinder } from "../pathfinder";
 
 import { Drawer } from "./Drawer";
 import p5 from "p5";
 import { setNeighbors } from "./Cell";
 
-export const Agent = (p5: p5, datas: ICellPathFinderData[][]) => {
-  const validDatas = datas.flatMap((d) => d).filter((d) => d);
-
-  const start = validDatas[Math.trunc(p5.random(0, validDatas.length - 1))];
-  const end = validDatas[Math.trunc(p5.random(0, validDatas.length - 1))];
-
+export const Agent = (  
+  start: ICellPathFinderData,
+  end: ICellPathFinderData
+) => {
   const result = PathFinder({
     start: start!,
     end: end!,
@@ -23,12 +26,12 @@ export const Agent = (p5: p5, datas: ICellPathFinderData[][]) => {
   };
 };
 
-const createAgent = (
-  p5: p5,
-  datas: ICellPathFinderData[][],
+const createAgent = (  
+  start: ICellPathFinderData,
+  end: ICellPathFinderData,
   showSets: boolean = false
 ) => {
-  const result = Agent(p5, datas);
+  const result = Agent(start, end);
   if (showSets) {
     for (const cell of result.openSet) {
       cell.element!.types = CellType.OpenSet;
@@ -40,7 +43,12 @@ const createAgent = (
   }
 
   result.end!.element!.types = CellType.Target;
-  return result.path.map((p) => p.element);
+  return result;
+};
+
+type AgentPath = {
+  result: AAsteriskDataResult;
+  current: number;
 };
 
 export const Grid = (
@@ -56,7 +64,11 @@ export const Grid = (
   let cellWidth = 0;
   let cellHeight = 0;
   const drawer = Drawer();
-  const paths: { path: ICellElement[]; current: number }[] = [];
+  const paths: {
+    target?: AgentPath;
+    attacker?: AgentPath;
+    defense?: AgentPath;
+  } = {};
 
   return {
     setup: () => {
@@ -98,24 +110,51 @@ export const Grid = (
         }
       }
       setNeighbors(cols, rows, datas);
-      paths.push({ path: createAgent(p5, datas), current: 0 });
-      paths.push({ path: createAgent(p5, datas), current: 0 });
-      paths.push({ path: createAgent(p5, datas), current: 0 });
-      // p5.frameRate(30);
+      const validDatas = [...datas].flatMap((d) => d).filter((d) => d);
+
+      const targetStart =
+        validDatas[Math.trunc(p5.random(0, validDatas.length - 1))];
+      const targetEnd =
+        validDatas[Math.trunc(p5.random(0, validDatas.length - 1))];
+      paths.target = {
+        result: createAgent(targetStart!, targetEnd!),
+        current: 0,
+      };
     },
-    draw: () => {
+    draw: () => {      
       p5.background(255);
       drawer.drawCells(p5, cells, cellWidth, cellHeight);
 
-      for (const path of paths) {
-        if (path.current <= path.path.length - 1) {
-          const p: ICellElement[] = path.path.slice(0, path.current)!;
-          path.current = path.current + 1;
-          drawer.drawPath(p5, p, cellWidth, cellHeight);
+      const agents = [];
+      if (paths.target) {
+        agents.push(paths.target);
+      }
+      if (paths.attacker) {
+        agents.push(paths.attacker);
+      }
+      if (paths.defense) {
+        agents.push(paths.defense);
+      }
+      let finishCount = 0;
+      for (const agent of agents) {
+        const path = agent.result.path;
+        if (agent.current <= path.length - 1) {
+          const p: ICellElement[] = path
+            .slice(0, agent.current)
+            .map((p) => p.element);
+          agent.current = agent.current + 1;          
+          drawer.drawPath(p5, p, cellWidth, cellHeight);          
         } else {
-          drawer.drawPath(p5, path.path, cellWidth, cellHeight);
+          finishCount++;          
+          drawer.drawPath(
+            p5,
+            agent.result.path.map((p) => p.element),
+            cellWidth,
+            cellHeight
+          );          
         }
       }
+      if (finishCount === agents.length) p5.noLoop();
 
       drawer.drawWalls(p5, walls, cellWidth, cellHeight);
     },

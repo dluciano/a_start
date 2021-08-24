@@ -44,14 +44,17 @@ export const PathFinder = ({
           winner = i;
         }
       }
+
       const current = openSet[winner]!;
       const path: ICellPathFinderData[] = [];
       let tmp = current;
       path.push(tmp);
+
       while (tmp.previous) {
         path.push(tmp.previous);
         tmp = tmp.previous;
       }
+
       if (current == end) {
         return {
           openSet,
@@ -63,8 +66,10 @@ export const PathFinder = ({
       }
 
       removeFromArray(openSet, current);
+
       closeSet.push(current);
       const neighbors = current.neighbors;
+
       for (let i = 0; i < neighbors.length; i++) {
         const neighbor = neighbors[i]!;
         if (!neighbor) continue;

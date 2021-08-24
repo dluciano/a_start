@@ -3,8 +3,8 @@ import P5 from "p5";
 
 export const Sketch = (p5: P5) => {
   const rows = 75;
-  const cols = 75;
-  const wallPerct = 0.2;
+  const cols = rows;
+  const wallPerct = 0.324;
 
   const grid = Grid(p5, cols, rows, wallPerct, () => ({
     width: p5.width,

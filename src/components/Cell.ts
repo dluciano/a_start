@@ -9,7 +9,16 @@ export const mapPositiontoIndex = (
   return (pos.row % rows) + pos.col * cols;
 };
 
-function* getNeighbors(element: ICellElement, cols: number, rows: number) {
+type Neighbor = {
+  neighbor: ICellPathFinderData | undefined;
+  position: IGridPosition;
+};
+
+function* getAdjacentCellPositionsIterator(
+  element: ICellElement,
+  cols: number,
+  rows: number
+) {
   if (element.row > 0) {
     const topMiddle: IGridPosition = {
       col: element.col,
@@ -76,6 +85,17 @@ function* getNeighbors(element: ICellElement, cols: number, rows: number) {
   }
 }
 
+const isBlock = (
+  neighbors: Neighbor[],
+  a: ElementOrientation,
+  b: ElementOrientation
+) => {
+  const aPos = neighbors.find((c) => c.position.orientation === a);
+  const bPos = neighbors.find((c) => c.position.orientation === b);
+  if (!aPos?.neighbor && !bPos?.neighbor) return true;
+  return false;
+};
+
 export const setNeighbors = (
   cols: number,
   rows: number,
@@ -85,36 +105,29 @@ export const setNeighbors = (
     const rowCells = cells[col]!;
     for (let row = 0; row < rowCells.length; row++) {
       const cell = rowCells[row]!;
-      if (!cell) continue;
-      if (!cell.element) continue;
+      if (!cell || !cell.element) continue;
 
-      const positions = getNeighbors(cell.element, cols, rows);
+      const positions = getAdjacentCellPositionsIterator(cell.element, cols, rows);
       let current = positions.next();
-      const neighbors = Array<{
-        neighbor: ICellPathFinderData | undefined;
-        position: IGridPosition;
-      }>();
+      const neighbors: Neighbor[] = [];
       // const isH = cell.element.col === 2 && cell.element.row == 2;
       // if (isH) cell.element.masterHightlight = true;
+
       while (!current.done) {
         const position = current.value;
         const neighbor = cells[position.col]![position.row];
         neighbors.push({ neighbor, position });
         // if (isH) neighbor.element!.highlight = true;
-        // cell.neighbors.push(neighbor!);
+        cell.neighbors.push(neighbor!);
         current = positions.next();
       }
-      const isBlock = (a: ElementOrientation, b: ElementOrientation) => {
-        const aPos = neighbors.find((c) => c.position.orientation === a);
-        const bPos = neighbors.find((c) => c.position.orientation === b);
-        if (!aPos?.neighbor && !bPos?.neighbor) return true;
-        return false;
-      };
+
       for (const item of neighbors) {
         const neighbor = item.neighbor;
         if (!neighbors) continue;
+
         if (item.position.orientation === ElementOrientation.TopLeft) {
-          const isBlocked = isBlock(
+          const isBlocked = isBlock(neighbors,
             ElementOrientation.TopMiddle,
             ElementOrientation.CenterLeft
           );
@@ -122,6 +135,7 @@ export const setNeighbors = (
         }
         if (item.position.orientation === ElementOrientation.TopRight) {
           const isBlocked = isBlock(
+            neighbors,
             ElementOrientation.TopMiddle,
             ElementOrientation.CenterRight
           );
@@ -129,6 +143,7 @@ export const setNeighbors = (
         }
         if (item.position.orientation === ElementOrientation.BottomRight) {
           const isBlocked = isBlock(
+            neighbors,
             ElementOrientation.CenterRight,
             ElementOrientation.BottomMiddle
           );
@@ -136,6 +151,7 @@ export const setNeighbors = (
         }
         if (item.position.orientation === ElementOrientation.BottomLeft) {
           const isBlocked = isBlock(
+            neighbors,
             ElementOrientation.BottomMiddle,
             ElementOrientation.CenterLeft
           );
