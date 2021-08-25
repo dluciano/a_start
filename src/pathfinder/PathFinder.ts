@@ -4,8 +4,8 @@ import { euclideanDistance } from "../distance-formulas";
 import { removeFromArray } from "../common";
 
 export type AStartRequest = {
-  start: {col: number, row: number};
-  end: {col: number, row: number};
+  start: { col: number; row: number };
+  end: { col: number; row: number };
   map: boolean[][];
   cols: number;
   rows: number;
@@ -24,12 +24,12 @@ export const finPathByAStartAlg = ({
   cols,
   rows,
   start,
-  end
+  end,
 }: AStartRequest): AStartDataResult => {
   const cells = createCells(cols, rows, map);
-  const startCell=cells[start.col]![start.row]!;
-  const endCell=cells[end.col]![end.row]!;
-  
+  const startCell = cells[start.col]![start.row]!;
+  const endCell = cells[end.col]![end.row]!;
+
   const openSet: ICellPathFinderData[] = [];
   const closeSet: ICellPathFinderData[] = [];
   openSet.push(startCell!);
@@ -61,7 +61,7 @@ export const finPathByAStartAlg = ({
           closeSet,
           solved: true,
           doesNotHaveSolution: false,
-          path: path.reverse(),
+          path: path,
         };
       }
 
