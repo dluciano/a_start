@@ -1,22 +1,14 @@
-import { euclideanDistance, removeFromArray } from "../common";
+import { ICellPathFinderData, createCells } from "./Cell";
 
-export interface ICellElement {
-  readonly row: number;
-  readonly col: number;
-}
-
-export interface ICellPathFinderData {
-  f: number;
-  g: number;
-  h: number;
-  neighbors: ICellPathFinderData[];
-  previous?: ICellPathFinderData;
-  element: ICellElement;
-}
+import { euclideanDistance } from "../distance-formulas";
+import { removeFromArray } from "../common";
 
 export type AStartRequest = {
-  start: ICellPathFinderData;
-  end: ICellPathFinderData;
+  start: {col: number, row: number};
+  end: {col: number, row: number};
+  map: boolean[][];
+  cols: number;
+  rows: number;
 };
 
 export type AStartDataResult = {
@@ -27,10 +19,20 @@ export type AStartDataResult = {
   path: ICellPathFinderData[];
 };
 
-export const PathFinder = ({ start, end }: AStartRequest): AStartDataResult => {
+export const finPathByAStartAlg = ({
+  map,
+  cols,
+  rows,
+  start,
+  end
+}: AStartRequest): AStartDataResult => {
+  const cells = createCells(cols, rows, map);
+  const startCell=cells[start.col]![start.row]!;
+  const endCell=cells[end.col]![end.row]!;
+  
   const openSet: ICellPathFinderData[] = [];
   const closeSet: ICellPathFinderData[] = [];
-  openSet.push(start!);
+  openSet.push(startCell!);
   while (true) {
     if (openSet.length > 0) {
       let winner = 0;
@@ -44,7 +46,7 @@ export const PathFinder = ({ start, end }: AStartRequest): AStartDataResult => {
 
       const current = openSet[winner]!;
 
-      if (current == end) {
+      if (current == endCell) {
         const path: ICellPathFinderData[] = [];
         let tmp = current;
         path.push(tmp);
@@ -88,8 +90,8 @@ export const PathFinder = ({ start, end }: AStartRequest): AStartDataResult => {
             neighbor.h = euclideanDistance(
               neighbor.element.col,
               neighbor.element.row,
-              end.element.col,
-              end.element.row
+              endCell.element.col,
+              endCell.element.row
             );
             neighbor.f = neighbor.g + neighbor.h;
             neighbor.previous = current;

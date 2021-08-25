@@ -1,49 +1,24 @@
-import { ICellElement, ICellPathFinderData } from "../pathfinder";
-
-export interface IDrawerObject {}
-
-export interface IWall extends IDrawerObject, ICellElement {}
-
-export enum CellType {
-  None = 0,
-  OpenSet = 1,
-  CloseSet = 2,
-  Target = 3,
-}
-
-export enum Position {
-  TopMiddle,
-  TopRight,
-  CenterRight,
-  BottomRight,
-  BottomMiddle,
-  BottomLeft,
-  CenterLeft,
-  TopLeft,  
-}
-export interface IGridElement {
+export interface IPosition {
   col: number;
   row: number;
-  position: Position;
-}
-export interface ICell extends IDrawerObject, ICellElement {
-  data?: ICellPathFinderData;
-  // highlight?: boolean;
-  // masterHightlight?: boolean;
-  types: CellType;
 }
 
-export interface IDrawable {
-  draw?: () => void;
-}
+type CellDrawableType = {
+  type: "CellDrawableType";
+  element: IPosition;
+};
 
-export interface ISetupable {
-  setup?: () => void;
-}
+type WallDrawableType = {
+  type: "WallDrawableType";
+  element: IPosition;
+};
 
-export interface IRenderable extends IDrawable, ISetupable {}
+type PathDrawableType = {
+  type: "PathDrawableType";
+  element: IPosition;
+};
 
-export interface ISize {
-  width: number;
-  height: number;
-}
+export type IDrawableType =
+  | CellDrawableType
+  | WallDrawableType
+  | PathDrawableType;

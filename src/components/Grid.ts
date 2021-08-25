@@ -1,54 +1,56 @@
-import {
-  AStartDataResult,
-  ICellElement,
-  ICellPathFinderData,
-  PathFinder,
-} from "../pathfinder";
-import { CellType, ICell, IRenderable, ISize, IWall } from "./interfaces";
+import { drawCell, drawIndicator, drawPath, drawWall } from "../drawers";
 
-import { Drawer } from "./Drawer";
+import { IPosition } from "./interfaces";
+import { createRandomMap } from "./Map";
+import { finPathByAStartAlg } from "../pathfinder";
+import { mapIndexToPosition } from "../common";
 import p5 from "p5";
-import { setNeighbors } from "./Cell";
 
-export const Agent = (  
-  start: ICellPathFinderData,
-  end: ICellPathFinderData
+const getRandomPositionFromCell = (
+  p5: p5,
+  map: boolean[][],
+  cols: number,
+  rows: number
 ) => {
-  const result = PathFinder({
-    start: start!,
-    end: end!,
+  const cells = map
+    .flatMap((m) => m)
+    .map((m, i) => ({ val: m, idx: i }))
+    .filter((m) => !m.val);
+  const startIdx = Math.trunc(p5.random(0, cells.length));
+  const position = mapIndexToPosition(cells[startIdx]!.idx, rows, cols);
+  return position;
+};
+
+type Maze = {
+  path: IPosition[];
+  startPos: IPosition;
+  endPos: IPosition;
+};
+
+const createMaze = (
+  p5: p5,
+  map: boolean[][],
+  cols: number,
+  rows: number
+): Maze => {
+  const startPos = getRandomPositionFromCell(p5, map, cols, rows);
+  const endPos = getRandomPositionFromCell(p5, map, cols, rows);
+  const result = finPathByAStartAlg({
+    map,
+    cols,
+    rows,
+    start: startPos,
+    end: endPos,
   });
-
+  const path = result.path.map((p) => ({
+    col: p.element.col,
+    row: p.element.row,
+  }));
   return {
-    ...result,
-    start,
-    end,
+    path,
+    startPos,
+    endPos,
   };
-};
-
-const createAgent = (  
-  start: ICellPathFinderData,
-  end: ICellPathFinderData,
-  showSets: boolean = false
-) => {
-  const result = Agent(start, end);
-  if (showSets) {
-    for (const cell of result.openSet) {
-      cell.element!.types = CellType.OpenSet;
-    }
-
-    for (const cell of result.closeSet) {
-      cell.element!.types = CellType.CloseSet;
-    }
-  }
-
-  result.end!.element!.types = CellType.Target;
-  return result;
-};
-
-type AgentPath = {
-  result: AStartDataResult;
-  current: number;
 };
 
 export const Grid = (
@@ -56,107 +58,37 @@ export const Grid = (
   cols: number,
   rows: number,
   wallPercentage: number,
-  canvasSize: () => ISize
-): IRenderable => {
-  const cells: ICell[] = [];
-  const walls: ICellElement[] = [];
-  const datas: ICellPathFinderData[][] = Array(cols);
+  canvasSize: () => { width: number; height: number }
+) => {
   let cellWidth = 0;
   let cellHeight = 0;
-  const drawer = Drawer();
-  const paths: {
-    target?: AgentPath;
-    attacker?: AgentPath;
-    defense?: AgentPath;
-  } = {};
+  let map: boolean[][];
+  const mazes: Maze[] = [];
 
   return {
     setup: () => {
       const canvasS = canvasSize();
       cellWidth = canvasS.width / cols;
       cellHeight = canvasS.height / rows;
-
-      for (let col = 0; col < cols; col++) {
-        datas[col] = Array(rows);
-        for (let row = 0; row < rows; row++) {
-          const isWall = Math.random() < wallPercentage;
-          if (isWall) {
-            const wall: IWall = {
-              col,
-              row,
-            };
-            walls.push(wall);
-            continue;
-          }
-
-          const cell: ICell = {
-            col,
-            row,
-            data: undefined,
-            types: 0,
-            // highlight: false,
-          };
-          const data: ICellPathFinderData = {
-            f: 0,
-            g: 0,
-            h: 0,
-            neighbors: [],
-            previous: undefined,
-            element: cell,
-          };
-          cell.data = data;
-          datas[col]![row] = data;
-          cells.push(cell);
-        }
+      map = createRandomMap(cols, rows, wallPercentage);
+      for (let i = 0; i < 3; i++) {
+        mazes.push(createMaze(p5, map, cols, rows));
       }
-      setNeighbors(cols, rows, datas);
-      const validDatas = [...datas].flatMap((d) => d).filter((d) => d);
-
-      const targetStart =
-        validDatas[Math.trunc(p5.random(0, validDatas.length - 1))];
-      const targetEnd =
-        validDatas[Math.trunc(p5.random(0, validDatas.length - 1))];
-      paths.target = {
-        result: createAgent(targetStart!, targetEnd!),
-        current: 0,
-      };
     },
-    draw: () => {      
-      p5.background(255);
-      drawer.drawCells(p5, cells, cellWidth, cellHeight);
-
-      const agents = [];
-      if (paths.target) {
-        agents.push(paths.target);
-      }
-      if (paths.attacker) {
-        agents.push(paths.attacker);
-      }
-      if (paths.defense) {
-        agents.push(paths.defense);
-      }
-      let finishCount = 0;
-      for (const agent of agents) {
-        const path = agent.result.path;
-        if (agent.current <= path.length - 1) {
-          const p: ICellElement[] = path
-            .slice(0, agent.current)
-            .map((p) => p.element);
-          agent.current = agent.current + 1;          
-          drawer.drawPath(p5, p, cellWidth, cellHeight);          
-        } else {
-          finishCount++;          
-          drawer.drawPath(
-            p5,
-            agent.result.path.map((p) => p.element),
-            cellWidth,
-            cellHeight
-          );          
+    draw: () => {
+      p5.background(155);
+      for (let col = 0; col < cols; col++) {
+        for (let row = 0; row < rows; row++) {
+          const isWall = map[col]![row];
+          if (isWall) drawWall(p5, { col, row }, cellWidth, cellHeight);
+          else drawCell(p5, { col, row }, cellWidth, cellHeight);
         }
       }
-      if (finishCount === agents.length) p5.noLoop();
-
-      drawer.drawWalls(p5, walls, cellWidth, cellHeight);
+      for (const maze of mazes) {
+        drawPath(p5, maze.path, cellWidth, cellHeight);
+        drawIndicator(p5, maze.startPos, true, cellWidth, cellHeight);
+        drawIndicator(p5, maze.endPos, false, cellWidth, cellHeight);
+      }
     },
   };
 };

@@ -1,5 +1,31 @@
-import { ICellElement, ICellPathFinderData } from "../pathfinder";
-import { IGridElement, Position } from "./interfaces";
+export interface ICellElement {
+  readonly col: number;
+  readonly row: number;
+}
+
+export interface ICellPathFinderData {
+  f: number;
+  g: number;
+  h: number;
+  neighbors: ICellPathFinderData[];
+  previous?: ICellPathFinderData;
+  element: ICellElement;
+}
+
+export enum Position {
+  TopMiddle,
+  TopRight,
+  CenterRight,
+  BottomRight,
+  BottomMiddle,
+  BottomLeft,
+  CenterLeft,
+  TopLeft,
+}
+
+export interface IGridElement extends ICellElement {
+  readonly position: Position;
+}
 
 export const mapPositiontoIndex = (
   pos: IGridElement,
@@ -131,7 +157,31 @@ const getAdjecentCells = (
   return adjectentCells;
 };
 
-export const setNeighbors = (
+const createEmptyCells = (cols: number, rows: number, map: boolean[][]) => {
+  const cells: ICellPathFinderData[][] = Array(cols);
+
+  for (let col = 0; col < cols; col++) {
+    cells[col] = Array(rows);
+    for (let row = 0; row < rows; row++) {
+      const isWall = map[col]![row];
+      if (isWall) continue;
+      cells[col]![row] = {
+        f: 0,
+        g: 0,
+        h: 0,
+        neighbors: [],
+        previous: undefined,
+        element: {
+          col: col,
+          row: row,
+        },
+      };
+    }
+  }
+  return cells;
+};
+
+const setNeighbors = (
   cols: number,
   rows: number,
   cells: ICellPathFinderData[][]
@@ -165,4 +215,14 @@ export const setNeighbors = (
       }
     }
   }
+};
+
+export const createCells = (
+  cols: number,
+  rows: number,
+  map: boolean[][]
+): ICellPathFinderData[][] => {
+  const cells = createEmptyCells(cols, rows, map);
+  setNeighbors(cols, rows, cells);
+  return cells;
 };
