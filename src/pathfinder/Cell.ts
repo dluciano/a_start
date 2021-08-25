@@ -113,7 +113,7 @@ const getAdjacentCellPositions = (
   return adjecentPositions;
 };
 
-const isBlock = (
+const isCellBlocked = (
   cells: AdjecentCell[],
   orientationA: Position,
   orientationB: Position
@@ -206,7 +206,7 @@ const setNeighbors = (
         const blockerPositions = getPositionBlockers(adjecentCell);
         const isBlocked =
           blockerPositions.length > 0 &&
-          isBlock(adjecentCells, blockerPositions[0]!, blockerPositions[1]!);
+          isCellBlocked(adjecentCells, blockerPositions[0]!, blockerPositions[1]!);
         return !isBlocked;
       });
 
