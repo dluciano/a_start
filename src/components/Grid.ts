@@ -57,6 +57,13 @@ const createMaze = (
   };
 };
 
+const printResultText = (p5: p5, text: string) => {
+  p5.noLoop();
+  p5.textSize(32);
+  p5.fill(0, 102, 153);
+  p5.text(text, 10, 60);
+}
+
 export const Grid = (
   p5: p5,
   cols: number,
@@ -70,7 +77,7 @@ export const Grid = (
   let seekAndDestroyObjects: SeekAndDestroy = {
     attacker: undefined,
     target: undefined,
-  };  
+  };
   const paths: IPosition[][] = [];
   return {
     setup: () => {
@@ -114,21 +121,23 @@ export const Grid = (
       );
 
       paths[0] = [];
-      paths[1] = [];      
+      paths[1] = [];
     },
     draw: () => {
-      let lastTargetPosition: IPosition = undefined;
-      if (seekAndDestroyObjects.target.path.length > 0) {
-        lastTargetPosition = seekAndDestroyObjects.target.path.pop()!;
-        paths[0].push(lastTargetPosition);
+      let lastTargetPosition: IPosition | undefined = undefined;
+      const targetPath = seekAndDestroyObjects.target!.path;
+      const attackerPath = seekAndDestroyObjects.attacker!.path;
+      if (targetPath.length > 0) {
+        lastTargetPosition = targetPath.pop()!;
+        paths[0]!.push(lastTargetPosition);
       }
-      if (seekAndDestroyObjects.attacker.path.length > 0) {
-        const lastAttackerPosition = seekAndDestroyObjects.attacker.path.pop()!;
-        paths[1].push(lastAttackerPosition);
+      if (attackerPath.length > 0) {
+        const lastAttackerPosition = attackerPath.pop()!;
+        paths[1]!.push(lastAttackerPosition);
       }
-      if (seekAndDestroyObjects.attacker.path.length > 0) {
-        const lastAttackerPosition = seekAndDestroyObjects.attacker.path.pop()!;
-        paths[1].push(lastAttackerPosition);
+      if (attackerPath.length > 0) {
+        const lastAttackerPosition = attackerPath.pop()!;
+        paths[1]!.push(lastAttackerPosition);
       }
 
       p5.background(155);
@@ -178,36 +187,27 @@ export const Grid = (
       );
 
       if (
-        seekAndDestroyObjects.target.path.length <= 0 &&
-        seekAndDestroyObjects.attacker.path.length <= 0
+        targetPath.length <= 0 &&
+        attackerPath.length <= 0
       ) {
-        p5.noLoop();
-        console.log("Draw.");
+        printResultText(p5, "It is a draw");
         return;
       }
-      if (seekAndDestroyObjects.target.path.length <= 0) {
-        p5.noLoop();
-        console.log("target win.");
+      if (targetPath.length <= 0) {
+        printResultText(p5, "Target reached");
         return;
       }
-      if (seekAndDestroyObjects.attacker.path.length <= 0) {
-        p5.noLoop();
-        console.log("attacker win.");
+      if (attackerPath.length <= 0) {
+        printResultText(p5, "Attacker reached");
         return;
       }
 
-      if (
-        lastTargetPosition &&
-        seekAndDestroyObjects.attacker.path.length > 0
-      ) {
+      if (lastTargetPosition && attackerPath.length > 0) {
         const result = finPathByAStartAlg({
           map,
           cols,
           rows,
-          start:
-            seekAndDestroyObjects.attacker.path[
-              seekAndDestroyObjects.attacker?.path.length - 1
-            ],
+          start: attackerPath[attackerPath.length - 1]!,
           end: lastTargetPosition,
         });
         const path = result.path.map((p) => ({
